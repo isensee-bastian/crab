@@ -11,17 +11,22 @@ import (
 const (
 	ScreenWidth  = 1000
 	ScreenHeight = 800
+
+	crabStartX = 450
+	crabStartY = 450
 )
 
 // Game holds our data required for managing state. All data, like images, object positions, and scores, go here.
 type Game struct {
-	beachImage *ebiten.Image // Hold image bytes in game state for drawing.
+	beachImage *ebiten.Image
+	crabImages []*ebiten.Image // A slice (list) of images used for animations, first image at index 0, second at index 1 and so on.
 }
 
 // NewGame prepares a fresh game state required for startup.
 func NewGame() *Game {
 	return &Game{
-		beachImage: readImage(sprites.Beach), // Load image from sprites folder into memory.
+		beachImage: readImage(sprites.Beach),
+		crabImages: readAnimationImages(sprites.Crab), // Load multiple images for representing animations into a slice.
 	}
 }
 
@@ -37,10 +42,19 @@ func (g *Game) Update() error {
 
 // Draw renders all game images to the screen according to the current game state.
 func (g *Game) Draw(screen *ebiten.Image) {
-	opts := &ebiten.DrawImageOptions{}   // Image properties are configured via DrawImageOptions.
-	opts.GeoM.Translate(0, 0)            // Place image at position x=0, y=0 (upper left corner).
-	opts.GeoM.Scale(2, 2)                // Scale image by factor 2 (double its size).
-	screen.DrawImage(g.beachImage, opts) // Draw the actual image using our specified options.
+	// Draw beach first, all other images will be placed afterward to make it look like a background.
+	{
+		opts := &ebiten.DrawImageOptions{}
+		opts.GeoM.Translate(0, 0)
+		opts.GeoM.Scale(2, 2)
+		screen.DrawImage(g.beachImage, opts)
+	}
+	// Draw crab image.
+	{
+		opts := &ebiten.DrawImageOptions{}
+		opts.GeoM.Translate(crabStartX, crabStartY)
+		screen.DrawImage(g.crabImages[0], opts) // For now, just draw the first crab image (no animation yet).
+	}
 }
 
 // Layout returns the logical screen size of the game. It can differ from the native outside size and will be scaled if needed.
