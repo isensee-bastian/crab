@@ -12,8 +12,14 @@ const (
 	ScreenWidth  = 1000
 	ScreenHeight = 800
 
-	crabStartX = 450
-	crabStartY = 450
+	beachScaleFactor = 2 // The beach image has half the size of our game screen, hence we double its size to fill it.
+
+	crabStartX   = 450
+	crabStartY   = 450
+	crabStepSize = 2
+
+	walkableMinY = 180 * beachScaleFactor // Vertical position where the sand area starts.
+	walkableMaxY = 320 * beachScaleFactor // Vertical position where the sand area ends.
 )
 
 // Game holds our data required for managing state. All data, like images, object positions, and scores, go here.
@@ -44,19 +50,18 @@ func (g *Game) Update() error {
 
 	// Move crab according to pressed arrow keys. KeyPressDuration returns the number of ticks that passed since the
 	// user started pressing the key (without releasing it). IsKeyJustPressed from above would not work for us here
-	// since we want to keep the crab moving until a key is no longer pressed. Note that the crab can move anywhere,
-	// even outside the screen as we are not doing any bounds checking yet.
+	// since we want to keep the crab moving until a key is no longer pressed.
 	if inpututil.KeyPressDuration(ebiten.KeyArrowLeft) > 0 {
-		g.crabX -= 1
+		g.crabX = max(g.crabX-crabStepSize, 0) // Move no further left than where the screen starts (prevent negative X position).
 	}
 	if inpututil.KeyPressDuration(ebiten.KeyArrowRight) > 0 {
-		g.crabX += 1
+		g.crabX = min(g.crabX+crabStepSize, ScreenWidth-spriteWidth) // Move no further right than where the screen ends (include width of crab image, so it's still fully shown at the edge).
 	}
 	if inpututil.KeyPressDuration(ebiten.KeyArrowUp) > 0 {
-		g.crabY -= 1
+		g.crabY = max(g.crabY-crabStepSize, walkableMinY) // Move no further up than where the sand area starts.
 	}
 	if inpututil.KeyPressDuration(ebiten.KeyArrowDown) > 0 {
-		g.crabY += 1
+		g.crabY = min(g.crabY+crabStepSize, walkableMaxY-spriteHeight) // Move no further down than where the sand area ends (include height of crab image, so it's still fully on the sand).
 	}
 
 	return nil
@@ -68,7 +73,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	{
 		opts := &ebiten.DrawImageOptions{}
 		opts.GeoM.Translate(0, 0)
-		opts.GeoM.Scale(2, 2)
+		opts.GeoM.Scale(beachScaleFactor, beachScaleFactor)
 		screen.DrawImage(g.beachImage, opts)
 	}
 	// Draw crab image.
