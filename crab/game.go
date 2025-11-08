@@ -42,6 +42,23 @@ func (g *Game) Update() error {
 		return ebiten.Termination
 	}
 
+	// Move crab according to pressed arrow keys. KeyPressDuration returns the number of ticks that passed since the
+	// user started pressing the key (without releasing it). IsKeyJustPressed from above would not work for us here
+	// since we want to keep the crab moving until a key is no longer pressed. Note that the crab can move anywhere,
+	// even outside the screen as we are not doing any bounds checking yet.
+	if inpututil.KeyPressDuration(ebiten.KeyArrowLeft) > 0 {
+		g.crabX -= 1
+	}
+	if inpututil.KeyPressDuration(ebiten.KeyArrowRight) > 0 {
+		g.crabX += 1
+	}
+	if inpututil.KeyPressDuration(ebiten.KeyArrowUp) > 0 {
+		g.crabY -= 1
+	}
+	if inpututil.KeyPressDuration(ebiten.KeyArrowDown) > 0 {
+		g.crabY += 1
+	}
+
 	return nil
 }
 
