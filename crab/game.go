@@ -8,6 +8,7 @@ import (
 	"image"
 	"image/color"
 	_ "image/png"
+	"math/rand/v2"
 )
 
 // Constant values like static screen positions are defined here.
@@ -45,6 +46,8 @@ type Game struct {
 
 // NewGame prepares a fresh game state required for startup.
 func NewGame() *Game {
+	fishX, fishY := randomFishPosition()
+
 	return &Game{
 		beachImage: readImage(sprites.Beach),
 
@@ -55,8 +58,8 @@ func NewGame() *Game {
 
 		fishImage: readImage(sprites.Fish),
 		// Set the first collectible fishes position.
-		fishX: crabStartX + 100,
-		fishY: crabStartY + 100,
+		fishX: fishX,
+		fishY: fishY,
 	}
 }
 
@@ -90,11 +93,20 @@ func (g *Game) Update() error {
 	if crabArea.Overlaps(fishArea) {
 		// There is some overlap between the rectangular crab area and the rectangular fish area.
 		// That means, we collected the fish, remove it from its old position and spawn a new one at a different location.
-		g.fishX += 100 // For now, just spawn a new fish further to the right.
-		g.score += 1
+		g.fishX, g.fishY = randomFishPosition()
+		g.score += 1 // Increase score.
 	}
 
 	return nil
+}
+
+func randomFishPosition() (int, int) {
+	// Determine a random position on the walkable sand area. Note that there is a small chance of immediately colliding
+	// with our crabs position. This is fine for now and will lead to an immediate collect and respawn.
+	randomX := rand.IntN(ScreenWidth - spriteWidth)
+	randomY := walkableMinY + rand.IntN(walkableMaxY-walkableMinY-spriteHeight) // Must be in walkable sand area.
+
+	return randomX, randomY
 }
 
 // Draw renders all game images to the screen according to the current game state.
