@@ -1,10 +1,12 @@
 package crab
 
 import (
+	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/isensee-bastian/crab/resources/images/sprites"
 	"image"
+	"image/color"
 	_ "image/png"
 )
 
@@ -21,6 +23,9 @@ const (
 
 	walkableMinY = 180 * beachScaleFactor // Vertical position where the sand area starts.
 	walkableMaxY = 320 * beachScaleFactor // Vertical position where the sand area ends.
+
+	scoreX = 10
+	scoreY = 740
 )
 
 // Game holds our data required for managing state. All data, like images, object positions, and scores, go here.
@@ -34,6 +39,8 @@ type Game struct {
 	fishImage *ebiten.Image
 	fishX     int // The collectible fishes horizontal position.
 	fishY     int // The collectible fishes vertical position.
+
+	score int // The number of collected fishes.
 }
 
 // NewGame prepares a fresh game state required for startup.
@@ -84,6 +91,7 @@ func (g *Game) Update() error {
 		// There is some overlap between the rectangular crab area and the rectangular fish area.
 		// That means, we collected the fish, remove it from its old position and spawn a new one at a different location.
 		g.fishX += 100 // For now, just spawn a new fish further to the right.
+		g.score += 1
 	}
 
 	return nil
@@ -110,6 +118,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		opts.GeoM.Translate(float64(g.fishX), float64(g.fishY)) // Use current position from game state.
 		screen.DrawImage(g.fishImage, opts)
 	}
+	// Draw current score label.
+	drawBigText(screen, scoreX, scoreY, color.Black, fmt.Sprintf("Score: %d", g.score))
 }
 
 // Layout returns the logical screen size of the game. It can differ from the native outside size and will be scaled if needed.
