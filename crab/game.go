@@ -4,6 +4,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/isensee-bastian/crab/resources/images/sprites"
+	"image"
 	_ "image/png"
 )
 
@@ -73,6 +74,16 @@ func (g *Game) Update() error {
 	}
 	if inpututil.KeyPressDuration(ebiten.KeyArrowDown) > 0 {
 		g.crabY = min(g.crabY+crabStepSize, walkableMaxY-spriteHeight) // Move no further down than where the sand area ends (include height of crab image, so it's still fully on the sand).
+	}
+
+	// Check for collision of crab and fish by comparing their rectangular areas.
+	crabArea := image.Rect(g.crabX, g.crabY, g.crabX+spriteWidth-1, g.crabY+spriteHeight-1)
+	fishArea := image.Rect(g.fishX, g.fishY, g.fishX+spriteWidth-1, g.fishY+spriteHeight-1)
+
+	if crabArea.Overlaps(fishArea) {
+		// There is some overlap between the rectangular crab area and the rectangular fish area.
+		// That means, we collected the fish, remove it from its old position and spawn a new one at a different location.
+		g.fishX += 100 // For now, just spawn a new fish further to the right.
 	}
 
 	return nil
