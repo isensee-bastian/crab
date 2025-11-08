@@ -3,7 +3,7 @@ package crab
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"image/color"
+	"github.com/isensee-bastian/crab/resources/images/sprites"
 	_ "image/png"
 )
 
@@ -15,11 +15,14 @@ const (
 
 // Game holds our data required for managing state. All data, like images, object positions, and scores, go here.
 type Game struct {
+	beachImage *ebiten.Image // Hold image bytes in game state for drawing.
 }
 
 // NewGame prepares a fresh game state required for startup.
 func NewGame() *Game {
-	return &Game{}
+	return &Game{
+		beachImage: readImage(sprites.Beach), // Load image from sprites folder into memory.
+	}
 }
 
 // Update processes all games rules, like checking user input and keeping score. All state updates must occur here, NOT in Draw.
@@ -34,7 +37,10 @@ func (g *Game) Update() error {
 
 // Draw renders all game images to the screen according to the current game state.
 func (g *Game) Draw(screen *ebiten.Image) {
-	drawText(screen, 100, 300, color.White, "Project setup succeeded! Press Esc to exit and start programming.")
+	opts := &ebiten.DrawImageOptions{}   // Image properties are configured via DrawImageOptions.
+	opts.GeoM.Translate(0, 0)            // Place image at position x=0, y=0 (upper left corner).
+	opts.GeoM.Scale(2, 2)                // Scale image by factor 2 (double its size).
+	screen.DrawImage(g.beachImage, opts) // Draw the actual image using our specified options.
 }
 
 // Layout returns the logical screen size of the game. It can differ from the native outside size and will be scaled if needed.
