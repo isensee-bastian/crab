@@ -33,15 +33,18 @@ const (
 type Game struct {
 	beachImage *ebiten.Image
 
-	crabImages []*ebiten.Image // A slice (list) of images used for animations, first image at index 0, second at index 1 and so on.
-	crabX      int             // The crabs current horizontal position.
-	crabY      int             // The crabs current vertical position.
+	crabImages     []*ebiten.Image // A slice (list) of images used for animations, first image at index 0, second at index 1 and so on.
+	crabImageIndex int             // Index of the current crab image to show for the slice above. Required to show animations via alternating crab images.
+	crabX          int             // The crabs current horizontal position.
+	crabY          int             // The crabs current vertical position.
 
 	fishImage *ebiten.Image
 	fishX     int // The collectible fishes horizontal position.
 	fishY     int // The collectible fishes vertical position.
 
 	score int // The number of collected fishes.
+
+	tickInSecond int // The tick count of the current second, reset to zero after one second has passed. Required for updating animation indexes, i.e. showing a single image for N ticks.
 }
 
 // NewGame prepares a fresh game state required for startup.
@@ -69,6 +72,13 @@ func (g *Game) Update() error {
 		// Signal that the game shall terminate normally when the Escape key is pressed.
 		return ebiten.Termination
 	}
+
+	// Track ticks in second to determine which crab image to show to achieve an animation effect. We want to show each
+	// crab image of the animation for an equal portion of time in a single second (per TPS).
+	maxTicksPerSecond := ebiten.TPS()                         // Typically 60 ticks per second
+	maxTicksPerFrame := maxTicksPerSecond / len(g.crabImages) // Each animation image shall take up an equal portion of a second
+	g.tickInSecond = (g.tickInSecond + 1) % maxTicksPerSecond // The current tick in the current second, typically, between 0 and 59
+	g.crabImageIndex = g.tickInSecond / maxTicksPerFrame      // Pick the next crab image if needed, ensuring that every animation image is shown in a second, Typically 0 to 59 / 15 = between 0 and 3 (inclusive)
 
 	// Move crab according to pressed arrow keys. KeyPressDuration returns the number of ticks that passed since the
 	// user started pressing the key (without releasing it). IsKeyJustPressed from above would not work for us here
@@ -122,7 +132,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	{
 		opts := &ebiten.DrawImageOptions{}
 		opts.GeoM.Translate(float64(g.crabX), float64(g.crabY)) // Use current position from game state.
-		screen.DrawImage(g.crabImages[0], opts)                 // For now, just draw the first crab image (no animation yet).
+		screen.DrawImage(g.crabImages[g.crabImageIndex], opts)  // Draw animated crab by showing different crab images alternating.
 	}
 	// Draw collectible fish image.
 	{
