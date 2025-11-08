@@ -20,6 +20,8 @@ const (
 type Game struct {
 	beachImage *ebiten.Image
 	crabImages []*ebiten.Image // A slice (list) of images used for animations, first image at index 0, second at index 1 and so on.
+	crabX      int             // The crabs current horizontal position.
+	crabY      int             // The crabs current vertical position.
 }
 
 // NewGame prepares a fresh game state required for startup.
@@ -27,6 +29,9 @@ func NewGame() *Game {
 	return &Game{
 		beachImage: readImage(sprites.Beach),
 		crabImages: readAnimationImages(sprites.Crab), // Load multiple images for representing animations into a slice.
+		// Set the crabs start position.
+		crabX: crabStartX,
+		crabY: crabStartY,
 	}
 }
 
@@ -52,8 +57,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Draw crab image.
 	{
 		opts := &ebiten.DrawImageOptions{}
-		opts.GeoM.Translate(crabStartX, crabStartY)
-		screen.DrawImage(g.crabImages[0], opts) // For now, just draw the first crab image (no animation yet).
+		opts.GeoM.Translate(float64(g.crabX), float64(g.crabY)) // Use current position from game state.
+		screen.DrawImage(g.crabImages[0], opts)                 // For now, just draw the first crab image (no animation yet).
 	}
 }
 
